@@ -14,9 +14,9 @@ jobs:
   rsync:
     runs-on: ubuntu-latest
     steps:
-      # Must checkout first, otherwise it would show empty folder, see https://github.com/actions/checkout
+      # Make sure to run checkout first, otherwise the folder will be empty. See: https://github.com/actions/checkout
       - uses: actions/checkout@v4
-      # Modify `master` to a valid version, see https://github.com/marketplace/actions/action-rsync
+      # Replace `master` with a specific version; refer to https://github.com/marketplace/actions/action-rsync for available versions.
       - uses: up9cloud/action-rsync@master
         env:
           HOST: target.example.com
@@ -62,22 +62,22 @@ docker run -it --rm \
 
 ||Default Value|Description|
 |---|---|---|
-|**`HOST`**||Remote server ssh hostname or ip address<br>**Required if** **`MODE`** is `push` or `pull`|
-|**`REMOTE_HOSTS`**||Multiple remote hosts<br>Could be comma separate items style, e.q. 1.2.3.4,8.8.4.4<br>or one line one item style, e.q. 8.8.8.8\n111.111.111.111<br>It will execute pre & post scripts on every host<br>**Required if** **`MODE`** is `push` or `pull`|
-|**`USER`**|`root`|Remote server ssh user<br>It's useless when **`MODE`** is `local`|
-|**`PORT`**|`22`|Remote server ssh port<br>It's useless when **`MODE`** is `local`|
-|**`KEY`**||The ssh private key<br>**Required if** **`PASSWORD`** is not provided and **`MODE`** is `push` or `pull`|
-|**`PASSWORD`**||The ssh password<br>**Required if** **`KEY`** is not provided and **`MODE`** is `push` or `pull`|
-|**`SOURCE`**|`./`|Source path for folder or file|
-|**`TARGET`**||Target path for folder or file<br>**Required**|
-|**`MODE`**|`push`|Must be one of:<br>`push`: local (SOURCE) to remote (TARGET)<br>`pull`: remote (SOURCE) to local (TARGET)<br>`local`: local (SOURCE) to local (TARGET)|
-|**`VERBOSE`**|`false`|Set it to `true` when you need some tips|
+|**`HOST`**||SSH hostname or IP address of the remote server<br>**Required if** **`MODE`** is `push` or `pull`|
+|**`REMOTE_HOSTS`**||Multiple remote hosts<br>You can provide a comma-separated list (e.g., 1.2.3.4,8.8.4.4)<br>or one host per line (e.g., 8.8.8.8\n111.111.111.111)<br>Pre & post scripts will be executed on each host<br>**Required if** **`MODE`** is `push` or `pull`|
+|**`USER`**|`root`|SSH user for the remote server<br>Not used when **`MODE`** is `local`|
+|**`PORT`**|`22`|SSH port for the remote server<br>Not used when **`MODE`** is `local`|
+|**`KEY`**||SSH private key<br>**Required if** **`PASSWORD`** is not provided and **`MODE`** is `push` or `pull`|
+|**`PASSWORD`**||SSH password<br>**Required if** **`KEY`** is not provided and **`MODE`** is `push` or `pull`|
+|**`SOURCE`**|`./`|Source path for the folder or file|
+|**`TARGET`**||Target path for the folder or file<br>**Required**|
+|**`MODE`**|`push`|Allowed values:<br>`push`: local (SOURCE) to remote (TARGET)<br>`pull`: remote (SOURCE) to local (TARGET)<br>`local`: local (SOURCE) to local (TARGET)|
+|**`VERBOSE`**|`false`|Set to `true` for more detailed output|
 |**`ARGS`**|`-avz --delete --exclude=/.git/ --exclude=/.github/`|Arguments for rsync|
-|**`ARGS_MORE`**||More rsync arguments. Append more args for rsync, it means the final rsync arguments will be: `$ARGS $ARGS_MORE`.<br><br>For example, if you set ARGS_MORE to be `--no-o --no-g` and keep ARGS as default, then the final args will be: `-avz --delete --exclude=/.git/ --exclude=/.github/ --no-o --no-g`|
-|**`SSH_ARGS`**|`-p 22 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=quiet`|Arguments for ssh. The value of `-p` is dynamic, depends on what value you set for `PORT`, but what if you set SSH_ARGS, the PORT would be ignored|
-|**`RUN_SCRIPT_ON`**|`target`|Must be one of:<br>`target`: When **`MODE`** is `push`, run pre and post scripts on remote (because the target is on remote). When **`MODE`** is others, run on local.<br>`source`: When **`MODE`** is `push`, run pre and post scripts on local. When **`MODE`** is others, run on remote.<br>`local`: Always run scripts on local.<br>`remote`: Always run scripts on remote.|
-|**`PRE_SCRIPT`**||The script runs before rsync.<br>The target system of RUN_SCRIPT_ON must support `mktemp` command|
-|**`POST_SCRIPT`**||The script runs after rsync.<br>The target system of RUN_SCRIPT_ON must support `mktemp` command|
+|**`ARGS_MORE`**||Additional rsync arguments. Appended to ARGS, so final rsync arguments are: `$ARGS $ARGS_MORE`.<br><br>For example, setting ARGS_MORE to `--no-o --no-g` (with default ARGS) results in:<br>`-avz --delete --exclude=/.git/ --exclude=/.github/ --no-o --no-g`|
+|**`SSH_ARGS`**|`-p 22 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=quiet`|Arguments for SSH. The `-p` value is set dynamically from `PORT`, but if you set SSH_ARGS, the `PORT` value will be ignored.|
+|**`RUN_SCRIPT_ON`**|`target`|Allowed values:<br>`target`: When **`MODE`** is `push`, runs pre and post scripts on the remote (target) server; for other modes, runs on local.<br>`source`: When **`MODE`** is `push`, runs scripts locally; for other modes, runs on remote.<br>`local`: Always runs scripts locally.<br>`remote`: Always runs scripts on remote.|
+|**`PRE_SCRIPT`**||Script to run before rsync.<br>The target system defined by RUN_SCRIPT_ON must support the `mktemp` command|
+|**`POST_SCRIPT`**||Script to run after rsync.<br>The target system defined by RUN_SCRIPT_ON must support the `mktemp` command|
 
 ### Example
 
@@ -93,12 +93,12 @@ jobs:
       env:
         HOST: example.com
         KEY: ${{secrets.DEPLOY_SSH_KEY}}
-        # PASSWORD: ${{secrets.DEPLOY_SSH_PASSWORD}} # it's less secure, using KEY instead
+        # PASSWORD: ${{secrets.DEPLOY_SSH_PASSWORD}} # less secure than using KEY; preferring KEY for security
         TARGET: /app/hello-service/
 
         VERBOSE: true
         USER: ubuntu
-        # PORT: 2222 # no need to set this, because of $SSH_ARGS
+        # PORT: 2222 # no need to set this if you use $SSH_ARGS
         ARGS: -az --exclude=/.git/
         SSH_ARGS: '-p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
         SOURCE: ./public/
@@ -113,7 +113,7 @@ See also: [.github/workflows/main.yml](https://github.com/up9cloud/action-rsync/
 
 ## TODO
 
-- [ ] test ssh connection before executing
-- [ ] benchmark, compare with other actions based on js
-- [ ] lock the version of docker image
-- [ ] let variable names more meaningful, e.q. HOST to REMOTE_HOST
+- [ ] Verify SSH connection before execution
+- [ ] Benchmark and compare performance with other JavaScript-based actions
+- [ ] Pin the Docker image version
+- [ ] Use more descriptive variable names, e.g., rename HOST to REMOTE_HOST
